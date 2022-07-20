@@ -1,4 +1,10 @@
-        foreach (MeshFilter data in GetComponentsInChildren<MeshFilter>())
+
+    public static Vector3 GetRelativeOffsetOfModelCluster(Transform Parent)
+    {
+        Vector3 colli = Vector3.ProjectOnPlane(Parent.position, Parent.forward);
+        Vector3 colli2 = Vector3.ProjectOnPlane(Parent.position, Parent.forward);
+
+        foreach (MeshFilter data in Parent.GetComponentsInChildren<MeshFilter>())
         {
             if (data != null)
             {
@@ -12,7 +18,7 @@
                 cachi.y += data.transform.position.y;
                 cachi.z += data.transform.position.z;
 
-                cachi = Vector3.ProjectOnPlane(cachi, transform.forward);
+                cachi = Vector3.ProjectOnPlane(cachi, Parent.forward);
 
                 if (cachi.x > colli.x)
                 {
@@ -50,7 +56,7 @@
                 cachi.y += data.transform.position.y;
                 cachi.z += data.transform.position.z;
 
-                cachi = Vector3.ProjectOnPlane(cachi, transform.forward);
+                cachi = Vector3.ProjectOnPlane(cachi, Parent.forward);
 
                 if (cachi.x > colli.x)
                 {
@@ -75,15 +81,15 @@
                 }
                 if (cachi.z < colli2.z)
                 {
-                    colli2.z = cachi.z ;
+                    colli2.z = cachi.z;
                 }
             }
         }
 
-        Vector3 Final = (colli + colli2)/2 - Vector3.ProjectOnPlane(transform.position, transform.forward);
+        Vector3 Final = (colli + colli2) / 2 - Vector3.ProjectOnPlane(Parent.position, Parent.forward);
         Final = Quaternion.LookRotation(Vector3.up, Vector3.forward) * Final;
-        Final.x *= DistanceScaleForCenterFind.x;
-        Final.y *= DistanceScaleForCenterFind.y;
-        Final.z *= DistanceScaleForCenterFind.z;
-        
-        // Final is the Center of your 3d Model Cluster
+        Final.x *= 1/Parent.lossyScale.x;
+        Final.y *= 1 / Parent.lossyScale.y;
+        Final.z *= 1 / Parent.lossyScale.z;
+        return Final;
+    }
