@@ -1,95 +1,67 @@
-
-    public static Vector3 GetRelativeOffsetOfModelCluster(Transform Parent)
-    {
-        Vector3 colli = Vector3.ProjectOnPlane(Parent.position, Parent.forward);
-        Vector3 colli2 = Vector3.ProjectOnPlane(Parent.position, Parent.forward);
-
-        foreach (MeshFilter data in Parent.GetComponentsInChildren<MeshFilter>())
-        {
-            if (data != null)
+namespace WeaksideParadise{
+    public class RealWorldBounds{
+        public static MyBounds GetBoundsOfChildren(GameObject Parent)
             {
-                Vector3 cachi = data.sharedMesh.bounds.max;
+                MyBounds final = new MyBounds();
+                Matrix4x4 localToWorld = Parent.transform.localToWorldMatrix;
+                MeshFilter[] meshes = Parent.GetComponentsInChildren<MeshFilter>();
+                Vector3 RT = localToWorld.MultiplyPoint3x4(meshes[0].sharedMesh.vertices[0]), LB = localToWorld.MultiplyPoint3x4(meshes[0].sharedMesh.vertices[0]);
 
-                cachi.x = cachi.x * data.transform.localScale.x;
-                cachi.y = cachi.y * data.transform.localScale.y;
-                cachi.z = cachi.z * data.transform.localScale.z;
-                cachi = Quaternion.LookRotation(data.transform.forward, data.transform.up) * cachi;
-                cachi.x += data.transform.position.x;
-                cachi.y += data.transform.position.y;
-                cachi.z += data.transform.position.z;
-
-                cachi = Vector3.ProjectOnPlane(cachi, Parent.forward);
-
-                if (cachi.x > colli.x)
+                foreach (MeshFilter mf in meshes)
                 {
-                    colli.x = cachi.x;
+                    for (int i = 0; i < mf.sharedMesh.vertices.Length; ++i)
+                    {
+                        Vector3 world_v = localToWorld.MultiplyPoint3x4(mf.mesh.vertices[i]);
+                        RT = GetMaxVector(RT, world_v);
+                        LB = GetMinVector(LB, world_v);
+                    }
                 }
-                if (cachi.y > colli.y)
+                final.RT = RT;
+                final.LB = LB;
+                final.Center = (RT + LB) / 2;
+                final.Size = (Mathf.Abs((RT - LB).magnitude));
+                return final;
+            }
+            [System.Serializable]
+            public class MyBounds
+            {
+                public Vector3 RT = Vector3.zero, LB = Vector3.zero, Center = Vector3.zero;
+                public float Size;
+            }
+            public static Vector3 GetMaxVector(Vector3 one, Vector3 two)
+            {
+                Vector3 final = new Vector3(one.x, one.y, one.z);
+                if (two.x > final.x)
                 {
-                    colli.y = cachi.y;
+                    final.x = two.x;
                 }
-                if (cachi.z > colli.z)
+                if (two.y > final.y)
                 {
-                    colli.z = cachi.z;
+                    final.y = two.y;
                 }
-
-                if (cachi.x < colli2.x)
+                if (two.z > final.z)
                 {
-                    colli2.x = cachi.x;
+                    final.z = two.z;
                 }
-                if (cachi.y < colli2.y)
+                return final;
+            }
+            public static Vector3 GetMinVector(Vector3 one, Vector3 two)
+            {
+                Vector3 final = new Vector3(one.x, one.y, one.z);
+                if (two.x < final.x)
                 {
-                    colli2.y = cachi.y;
+                    final.x = two.x;
                 }
-                if (cachi.z < colli2.z)
+                if (two.y < final.y)
                 {
-                    colli2.z = cachi.z;
+                    final.y = two.y;
                 }
-
-                cachi = data.sharedMesh.bounds.min;
-
-                cachi.x = cachi.x * data.transform.localScale.x;
-                cachi.y = cachi.y * data.transform.localScale.y;
-                cachi.z = cachi.z * data.transform.localScale.z;
-                cachi = Quaternion.LookRotation(data.transform.forward, data.transform.up) * cachi;
-                cachi.x += data.transform.position.x;
-                cachi.y += data.transform.position.y;
-                cachi.z += data.transform.position.z;
-
-                cachi = Vector3.ProjectOnPlane(cachi, Parent.forward);
-
-                if (cachi.x > colli.x)
+                if (two.z < final.z)
                 {
-                    colli.x = cachi.x;
+                    final.z = two.z;
                 }
-                if (cachi.y > colli.y)
-                {
-                    colli.y = cachi.y;
-                }
-                if (cachi.z > colli.z)
-                {
-                    colli.z = cachi.z;
-                }
-
-                if (cachi.x < colli2.x)
-                {
-                    colli2.x = cachi.x;
-                }
-                if (cachi.y < colli2.y)
-                {
-                    colli2.y = cachi.y;
-                }
-                if (cachi.z < colli2.z)
-                {
-                    colli2.z = cachi.z;
-                }
+                return final;
             }
         }
-
-        Vector3 Final = (colli + colli2) / 2 - Vector3.ProjectOnPlane(Parent.position, Parent.forward);
-        Final = Quaternion.LookRotation(Vector3.up, Vector3.forward) * Final;
-        Final.x *= 1/Parent.lossyScale.x;
-        Final.y *= 1 / Parent.lossyScale.y;
-        Final.z *= 1 / Parent.lossyScale.z;
-        return Final;
     }
+}
